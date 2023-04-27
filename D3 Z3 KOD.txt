@@ -1,0 +1,38 @@
+close all
+i=4;j=6;k=3;
+%%
+R=0.32*abs(i);
+L=0.001;
+ke=0.0323;
+J=7.5*abs(j)*k*1e-4;
+b=0.0002;
+%%
+A=[-R/L -ke/L 0;ke/J -b/J 0;0 1 0];
+B=[1/L;0;0];
+C=[1 0 0;0 1 0;0 0 1]; % sve tri promjenljive definisemo kao izlaz, 
+% a u Simulinku cemo naknadno smao jednu poslati na Scope ili u radni prostor
+D=zeros(3,1); % mora se definisati, jer state space block u Simulinku trazi da se unese D
+%%
+tf=10; % trajanje simulacije
+r=1; % amplituda step funkcije (pronaci ove promjenljive u simulink modelu)
+a=sim('model1','ReturnWorkspaceOutputs', 'on') % simulacija modela
+plot(a.y.time,a.y.signals.values) % moguce da kod starijih verzija matlaba nije neophodno sve sacuvati u a
+p=ones(1,50);
+t=ones(1,50);
+for i=1:50%treba nam 50 vrijednosti
+    r=40*rand-20;
+    p(i)=r;%ucitavanje ulaza u jedan niz
+    a=sim('model1','ReturnWorkspaceOutputs','on');
+    t(i)=a.y.signals.values(end);%ucitavanje izlaza u niz
+end
+net1=feedforwardnet([30]);
+net1=train(net1,p,t);
+figure(2)
+r1=[-5 -1 10 15];%zadati ulazi
+hold on
+for i=1:4
+    r=r1(i);
+    a=sim('model1','ReturnWorkspaceOutputs','on');
+    plot(a.y.time,a.y.signals.values);
+end
+legend('r = -5', 'r = -1', 'r = 10', 'r = 15');
